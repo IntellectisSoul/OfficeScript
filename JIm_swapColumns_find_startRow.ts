@@ -1,5 +1,5 @@
 //21.Dec.2023 : this finds the correct column headers as starting point and swaps them.
-//requires input on which columns to swap : Swap the column headers.
+//requires input on which columns to swap : Swap the column headers and column contents.
 
 function main(workbook: ExcelScript.Workbook, startColumn: string = 'A', endColumn: string = 'J') {
     // Get the worksheet.
@@ -24,7 +24,7 @@ function main(workbook: ExcelScript.Workbook, startColumn: string = 'A', endColu
         console.log(`Row ${i + 1} - usedRangeValues ${usedRangeValues.length}`);
         console.log(`Row ${i + 1} - Values: ${JSON.stringify(testRangeValues)}`);
         console.log(`Row ${i + 1} - Non-empty cells: ${testRangeColumnCount}`);  
-        
+
         if (testRangeColumnCount === columnCount) {
             startRow = i + 1;
 
