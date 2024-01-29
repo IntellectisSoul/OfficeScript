@@ -3,9 +3,11 @@
 //Optionally, one might also use "Option 1 : Find ID of cell Method" to identify the starting cell  of row header.
 //Next steps to improve : test bottom row to avoid fake endcell. 
 
-//-JSLim  
+//this script outputs the tableValues (contents of entire table) : which can be used in subsequent PA action like Compose to get the results. 
 
-function main(workbook: ExcelScript.Workbook, tablename: string)) {  //tablename allows passing argument from PA to Officescript.
+//-JSLim
+
+function main(workbook: ExcelScript.Workbook, tablename: string) {
   // getUsedRange() : Get the active sheet and range.
   const selectedSheet = workbook.getActiveWorksheet();
   const FullrangeAddress = selectedSheet.getUsedRange();
@@ -30,37 +32,9 @@ function main(workbook: ExcelScript.Workbook, tablename: string)) {  //tablename
   console.log(`Values: ${values}`);
   console.log(`Element Count: ${elementCount}`);
 
-/*
-//test bottom row to avoid fake endcell. identify correct endcell
-while (true) {
-  let testrangeAddress_columnCount = testrange(startcell_letter, startcell_number, endcell_letter, selectedSheet );
-
-  // Break the loop if testrangeAddress_columnCount equals columnCount
-  if (testrangeAddress_columnCount > (columnCount/2)) {
-    console.log(`starting Row ${startcell_letter}${startcell_number}, Header not found...moving to next row`);
-    // Increment startcell_number
-    startcell_number++;
-  } else {
-    // Define the final Range to be used to create the Table; set finalstartcell
-    let newRange = (startcell_letter + startcell_number) + ":" + (endcell_letter + endcell_number);
-    const table = selectedSheet.addTable(newRange, true);
-    const totalRows = endcell_number - startcell_number;
-    console.log(`new Range start : ${startcell_letter}${startcell_number}, Total rows = ${totalRows}`);
-    
-    if (table) {
-      table.setName("TermList");
-      console.log(`Table created successfully. Name: ${table.getName()}`);
-    } else {
-      console.log("Error creating table.");
-    }
-    break;  // This will break the loop.
-  }
-}
-*/
-
-  //test top row for header completion and then create table.
+   //test top row for header completion and then create table.
   while (true) {
-    let testrangeAddress_columnCount = testrange(startcell_letter, startcell_number, endcell_letter, selectedSheet );
+    let testrangeAddress_columnCount = testrange(startcell_letter, startcell_number, endcell_letter, selectedSheet);
 
     // Break the loop if testrangeAddress_columnCount equals columnCount
     if (testrangeAddress_columnCount !== columnCount) {
@@ -73,30 +47,49 @@ while (true) {
       const table = selectedSheet.addTable(newRange, true);
       const totalRows = endcell_number - startcell_number;
       console.log(`new Range start : ${startcell_letter}${startcell_number}, Total rows = ${totalRows}`);
-      
+
       if (table) {
         table.setName(tablename);
         console.log(`Table created successfully. Name: ${table.getName()}`);
+        // Get the range of the table and its values
+        const tableRange = table.getRange();
+        const tableValues = tableRange.getValues();      
+
+        // Create an array of objects (of key-value pairs) from the remaining rows. necessary step because OfficeScript doesnt output RangeValues type variables...must be string only.
+        const rows = tableValues.slice(1).map(row => {
+          let obj = {};
+          headers.forEach((header, i) => {
+            obj[header] = row[i];
+          });
+          return obj;
+        });
+
+        // Convert rows to a string and return the rows object
+        let tableValuesString = JSON.stringify(rows);
+        console.log(`rows : ${tableValuesString}`);
+        return { tableValuesString };
+
+
+       
       } else {
         console.log("Error creating table.");
       }
+    
       break;  // This will break the loop.
     }
   }
 
 
-    // Check if cell is null or undefined.
-    const iscellEmpty = isCellEmpty("A2", selectedSheet);
-    console.log(`Cell is empty: ${iscellEmpty}`);
-
-
+  // Check if cell is null or undefined.
+  const iscellEmpty = isCellEmpty("A2", selectedSheet);
+  console.log(`Cell is empty: ${iscellEmpty}`);
 
 }
 
 // FUNCTIONS
 
 //1 : Extract starting and ending cell.
-function extract_StartEndCell(rangeAddress: string): { startingCell: string; endingCell: string} {
+function extract_StartEndCell(rangeAddress: string): { startingCell: string; endingCell: string } {
   const parts = rangeAddress.split("!");
   const cellAddress = parts[1];
   const cells = cellAddress.split(":");
